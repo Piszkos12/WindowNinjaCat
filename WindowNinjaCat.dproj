@@ -119,15 +119,17 @@
         <AppEnableRuntimeThemes>true</AppEnableRuntimeThemes>
         <AppEnableHighDPI>true</AppEnableHighDPI>
         <VerInfo_Locale>1033</VerInfo_Locale>
-        <Icon_MainIcon>AblakCica_Icon.ico</Icon_MainIcon>
         <Manifest_File>(None)</Manifest_File>
+        <Icon_MainIcon>WindowNinjaCat_Icon1.ico</Icon_MainIcon>
+        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win64)'!=''">
         <AppEnableRuntimeThemes>true</AppEnableRuntimeThemes>
         <AppEnableHighDPI>true</AppEnableHighDPI>
         <VerInfo_Locale>1033</VerInfo_Locale>
-        <Icon_MainIcon>..\..\..\..\..\Downloads\Sonya-Swarm-Cat.ico</Icon_MainIcon>
+        <Icon_MainIcon>WindowNinjaCat_Icon.ico</Icon_MainIcon>
         <Manifest_File>(None)</Manifest_File>
+        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
     </PropertyGroup>
     <ItemGroup>
         <DelphiCompile Include="$(MainSource)">
