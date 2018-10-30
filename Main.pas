@@ -50,11 +50,11 @@ procedure TShortCutForm.Hotkey(Hotkey: String);
 var
   Window: HWND;
   Coordinates: TRect;
-  Monitor: TMonitor;
+  Monitor: TRect;
 Begin
   Window := GetForegroundWindow;
   GetWindowRect(Window, Coordinates);
-  Monitor := Screen.MonitorFromWindow(Window);
+  Monitor := Screen.MonitorFromWindow(Window).WorkareaRect;
   If Hotkey = '7' Then
     With Coordinates do
     begin
