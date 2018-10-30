@@ -46,40 +46,15 @@ implementation
 
 {$R *.dfm}
 
-Function GetRetkesfaszuWindow: HWND;
-var
-  Wnd: HWND;
-  TId, PId: DWord;
-Begin
-  Result := Winapi.Windows.GetFocus;
-  If Result = 0 Then
-  Begin
-    Wnd := GetForegroundWindow;
-    If Wnd <> 0 Then
-    Begin
-      TId := GetWindowThreadProcessId(Wnd, PId);
-      If AttachThreadInput(GetCurrentThreadid, TId, True) Then
-      Begin
-        Result := Winapi.Windows.GetFocus;
-        AttachThreadInput(GetCurrentThreadid, TId, False);
-      end;
-    end;
-  end;
-end;
-
 procedure TShortCutForm.Hotkey(Hotkey: String);
 var
   Window: HWND;
   Coordinates: TRect;
   Monitor: TMonitor;
 Begin
-  Window := GetForegroundWindow; // GetRetkesfaszuWindow;
-  OutputDebugString(PWideChar('Window: ' + inttostr(Window)));
+  Window := GetForegroundWindow;
   GetWindowRect(Window, Coordinates);
-  OutputDebugString(PWideChar('Rect: ' + inttostr(Coordinates.Left) + ',' +
-    inttostr(Coordinates.Top)));
   Monitor := Screen.MonitorFromWindow(Window);
-  OutputDebugString(PWideChar('Monitor: ' + inttostr(Monitor.MonitorNum)));
   If Hotkey = '7' Then
     With Coordinates do
     begin
