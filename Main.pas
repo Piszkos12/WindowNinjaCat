@@ -114,7 +114,6 @@ Begin
     end;
   MoveWindow(Window, Coordinates.Left, Coordinates.Top, Coordinates.Width,
     Coordinates.Height, True);
-  // SetWindowPos(Window, 0, 10, 10, 100, 100, 0);
 end;
 
 function LowLevelKeyboardProc(HookCode: Longint; MessageParam: WParam;
