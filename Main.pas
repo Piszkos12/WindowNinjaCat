@@ -1,162 +1,200 @@
-﻿unit Main;
+﻿Unit Main;
+
+Interface
 
-interface
-
-uses
+Uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Menus,
   Vcl.ExtCtrls;
 
-type
-  TShortCutForm = class(TForm)
+Type
+  TShortCutForm = Class(TForm)
     TrayIcon: TTrayIcon;
     PopupMenu: TPopupMenu;
     Exit1: TMenuItem;
-    procedure FormCreate(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
-    procedure Exit1Click(Sender: TObject);
-  private
-    procedure Hotkey(Hotkey: String);
-  end;
+    Procedure FormCreate(Sender: TObject);
+    Procedure FormDestroy(Sender: TObject);
+    Procedure Exit1Click(Sender: TObject);
+  Private
+    Procedure Hotkey(Hotkey: String);
+  End;
 
-var
+Var
   ShortCutForm: TShortCutForm;
   FHook: HHook = 0;
-  HotKeyProcessing: Boolean = False;
   WINPressed: Boolean = False;
-  SHIFTPressed: Boolean = False;
 
-const
-  WH_KEYBOARD_LL = 13;
-  LLKHF_ALTDOWN = KF_ALTDOWN shr 8;
+Type
+  TagKBDLLHOOKSTRUCT = Packed Record
+    VkCode: DWord;
+    ScanCode: DWord;
+    Flags: DWord;
+    Time: DWord;
+    DwExtraInfo: PDWord;
+  End;
 
-type
-  tagKBDLLHOOKSTRUCT = packed record
-    vkCode: DWord;
-    scanCode: DWord;
-    flags: DWord;
-    time: DWord;
-    dwExtraInfo: PDWord;
-  end;
-
-  TKBDLLHOOKSTRUCT = tagKBDLLHOOKSTRUCT;
+  TKBDLLHOOKSTRUCT = TagKBDLLHOOKSTRUCT;
   PKBDLLHOOKSTRUCT = ^TKBDLLHOOKSTRUCT;
 
-implementation
+Const
+  NUM0 = 45;
+  NUM1 = 35;
+  NUM2 = 40;
+  NUM3 = 34;
+  NUM4 = 37;
+  NUM5 = 12;
+  NUM6 = 39;
+  NUM7 = 36;
+  NUM8 = 38;
+  NUM9 = 33;
+
+Implementation
 
 {$R *.dfm}
 
-procedure TShortCutForm.Hotkey(Hotkey: String);
-var
+Procedure TShortCutForm.Hotkey(Hotkey: String);
+Var
   Window: HWND;
   Coordinates: TRect;
   Monitor: TRect;
+  Result: NativeInt;
 Begin
+  // Get foreground window
   Window := GetForegroundWindow;
+
+  // We don't want to arrange Taskbar
+  If Window = FindWindow('Shell_TrayWnd', Nil) Then
+    Exit;
+
+  // Get the window bounds
   GetWindowRect(Window, Coordinates);
+
+  // Multimonitor support
   Monitor := Screen.MonitorFromWindow(Window).WorkareaRect;
+
+  // Calculations depending on requested direction
   If Hotkey = '7' Then
-    With Coordinates do
-    begin
+    With Coordinates Do
+    Begin
       Left := Monitor.Left;
       Top := Monitor.Top;
-      Width := Monitor.Width div 2;
-      Height := Monitor.Height div 2;
-    end;
+      Width := Monitor.Width Div 2;
+      Height := Monitor.Height Div 2;
+    End;
   If Hotkey = '9' Then
-    With Coordinates do
-    begin
-      Left := Monitor.Left + Monitor.Width div 2;
+    With Coordinates Do
+    Begin
+      Left := Monitor.Left + Monitor.Width Div 2;
       Top := Monitor.Top;
-      Width := Monitor.Width div 2;
-      Height := Monitor.Height div 2;
-    end;
+      Width := Monitor.Width Div 2;
+      Height := Monitor.Height Div 2;
+    End;
   If Hotkey = '1' Then
-    With Coordinates do
-    begin
+    With Coordinates Do
+    Begin
       Left := Monitor.Left;
-      Top := Monitor.Top + Monitor.Height div 2;
-      Width := Monitor.Width div 2;
-      Height := Monitor.Height div 2;
-    end;
+      Top := Monitor.Top + Monitor.Height Div 2;
+      Width := Monitor.Width Div 2;
+      Height := Monitor.Height Div 2;
+    End;
+  If Hotkey = '2' Then
+    With Coordinates Do
+    Begin
+      Left := Monitor.Left;
+      Top := Monitor.Top + Monitor.Height Div 2;
+      Width := Monitor.Width;
+      Height := Monitor.Height Div 2;
+    End;
   If Hotkey = '3' Then
-    With Coordinates do
-    begin
-      Left := Monitor.Left + Monitor.Width div 2;
-      Top := Monitor.Top + Monitor.Height div 2;
-      Width := Monitor.Width div 2;
-      Height := Monitor.Height div 2;
-    end;
+    With Coordinates Do
+    Begin
+      Left := Monitor.Left + Monitor.Width Div 2;
+      Top := Monitor.Top + Monitor.Height Div 2;
+      Width := Monitor.Width Div 2;
+      Height := Monitor.Height Div 2;
+    End;
+
+  // Send restore message, it remove maximized state of the window
+  ShowWindow(Window, SW_RESTORE);
+
+  // Moving window to the calculated rect
   MoveWindow(Window, Coordinates.Left, Coordinates.Top, Coordinates.Width,
-    Coordinates.Height, True);
-end;
+      Coordinates.Height, True);
+End;
 
-function LowLevelKeyboardProc(HookCode: Longint; MessageParam: WParam;
-  StructParam: LParam): DWord; stdcall;
-var
+Function LowLevelKeyboardProc(HookCode: Longint; MessageParam: WParam;
+    StructParam: LParam): DWord; Stdcall;
+Var
   P: PKBDLLHOOKSTRUCT;
-begin
-  if (HookCode = HC_ACTION) then
-    case (MessageParam) of
+Begin
+  // Microsoftg noidea, it is always = HC_ACTION (=1)
+  If (HookCode = HC_ACTION) Then
+    Case (MessageParam) Of
+      // Check only keydown and keyup events
       WM_KEYDOWN, WM_SYSKEYDOWN, WM_KEYUP, WM_SYSKEYUP:
-        begin
+        Begin
+          // Get additional parameters about keystroke
           P := PKBDLLHOOKSTRUCT(StructParam);
-          if (P.vkCode = VK_LWIN) or (P.vkCode = VK_RWIN) then
-          begin
-            WINPressed := (MessageParam = WM_KEYDOWN);
-          end
-          else if (P.vkCode = VK_LSHIFT) or (P.vkCode = VK_RSHIFT) then
-          begin
-            SHIFTPressed := (MessageParam = WM_KEYDOWN);
-          end
-          else if MessageParam = WM_KEYDOWN then
-            if WINPressed then
-            begin
-              if (P.vkCode = 36) then
-              begin
-                ShortCutForm.Hotkey('7');
-                Result := 1;
-                exit;
-              end;
-              if (P.vkCode = 33) then
-              begin
-                ShortCutForm.Hotkey('9');
-                Result := 1;
-                exit;
-              end;
-              if (P.vkCode = 35) then
-              begin
-                ShortCutForm.Hotkey('1');
-                Result := 1;
-                exit;
-              end;
-              if (P.vkCode = 34) then
-              begin
-                ShortCutForm.Hotkey('3');
-                Result := 1;
-                exit;
-              end;
-            end;
-        end;
-    end;
+          // Handle WIN button pressing
+          If (P.VkCode = VK_LWIN) Or (P.VkCode = VK_RWIN) Then
+            WINPressed := (MessageParam = WM_KEYDOWN)
+          Else If MessageParam = WM_KEYDOWN Then
+            If WINPressed Then
+              // Independent whatisthis scancodes when pressing WIN+SHIFT+[whatever]
+              Case P.Vkcode Of
+                NUM7:
+                  Begin
+                    ShortCutForm.Hotkey('7');
+                    Result := 1;
+                    Exit;
+                  End;
+                NUM9:
+                  Begin
+                    ShortCutForm.Hotkey('9');
+                    Result := 1;
+                    Exit;
+                  End;
+                NUM1:
+                  Begin
+                    ShortCutForm.Hotkey('1');
+                    Result := 1;
+                    Exit;
+                  End;
+                NUM2:
+                  Begin
+                    ShortCutForm.Hotkey('2');
+                    Result := 1;
+                    Exit;
+                  End;
+                NUM3:
+                  Begin
+                    ShortCutForm.Hotkey('3');
+                    Result := 1;
+                    Exit;
+                  End;
+              End;
+        End;
+    End;
+  // If no our keycombo, go to the next hook in chain
   Result := CallNextHookEx(0, HookCode, MessageParam, StructParam);
-end;
+End;
 
-procedure TShortCutForm.Exit1Click(Sender: TObject);
-begin
+Procedure TShortCutForm.Exit1Click(Sender: TObject);
+Begin
   ShortCutForm.Close;
-end;
+End;
 
-procedure TShortCutForm.FormCreate(Sender: TObject);
-begin
+Procedure TShortCutForm.FormCreate(Sender: TObject);
+Begin
   FHook := SetWindowsHookEx(WH_KEYBOARD_LL, @LowLevelKeyboardProc,
-    Hinstance, 0);
-end;
+      Hinstance, 0);
+End;
 
-procedure TShortCutForm.FormDestroy(Sender: TObject);
-begin
-  if FHook > 0 then
+Procedure TShortCutForm.FormDestroy(Sender: TObject);
+Begin
+  If FHook > 0 Then
     UnHookWindowsHookEx(FHook);
-end;
+End;
 
-end.
+End.
+
