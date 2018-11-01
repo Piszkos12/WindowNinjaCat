@@ -152,31 +152,31 @@ Begin
               Case P.VkCode Of
                 NUM7:
                   Begin
-                    ShortCutForm.Hotkey('7');
+                    ShortCutForm.Hotkey(HK_ArrangeToTopLeftCorner);
                     Result := 1;
                     Exit;
                   End;
                 NUM9:
                   Begin
-                    ShortCutForm.Hotkey('9');
+                    ShortCutForm.Hotkey(HK_ArrangeToTopRightCorner);
                     Result := 1;
                     Exit;
                   End;
                 NUM1:
                   Begin
-                    ShortCutForm.Hotkey('1');
+                    ShortCutForm.Hotkey(HK_ArrangeToBottomLeftCorner);
                     Result := 1;
                     Exit;
                   End;
                 NUM2:
                   Begin
-                    ShortCutForm.Hotkey('2');
+                    ShortCutForm.Hotkey(HK_ArrangeToBottom);
                     Result := 1;
                     Exit;
                   End;
                 NUM3:
                   Begin
-                    ShortCutForm.Hotkey('3');
+                    ShortCutForm.Hotkey(HK_ArrangeToBottomRightCorner);
                     Result := 1;
                     Exit;
                   End;
