@@ -48,11 +48,17 @@ Const
   NUM8 = 38;
   NUM9 = 33;
 
+  HK_ArrangeToTopLeftCorner = 7;
+  HK_ArrangeToTopRightCorner = 9;
+  HK_ArrangeToBottomLeftCorner = 1;
+  HK_ArrangeToBottomRightCorner = 3;
+  HK_ArrangeToBottom = 2;
+
 Implementation
 
 {$R *.dfm}
 
-Procedure TShortCutForm.Hotkey(Hotkey: String);
+Procedure TShortCutForm.Hotkey(Hotkey: Integer);
 Var
   Window: HWND;
   Coordinates: TRect;
@@ -73,57 +79,59 @@ Begin
   Monitor := Screen.MonitorFromWindow(Window).WorkareaRect;
 
   // Calculations depending on requested direction
-  If Hotkey = '7' Then
-    With Coordinates Do
-    Begin
-      Left := Monitor.Left;
-      Top := Monitor.Top;
-      Width := Monitor.Width Div 2;
-      Height := Monitor.Height Div 2;
-    End;
-  If Hotkey = '9' Then
-    With Coordinates Do
-    Begin
-      Left := Monitor.Left + Monitor.Width Div 2;
-      Top := Monitor.Top;
-      Width := Monitor.Width Div 2;
-      Height := Monitor.Height Div 2;
-    End;
-  If Hotkey = '1' Then
-    With Coordinates Do
-    Begin
-      Left := Monitor.Left;
-      Top := Monitor.Top + Monitor.Height Div 2;
-      Width := Monitor.Width Div 2;
-      Height := Monitor.Height Div 2;
-    End;
-  If Hotkey = '2' Then
-    With Coordinates Do
-    Begin
-      Left := Monitor.Left;
-      Top := Monitor.Top + Monitor.Height Div 2;
-      Width := Monitor.Width;
-      Height := Monitor.Height Div 2;
-    End;
-  If Hotkey = '3' Then
-    With Coordinates Do
-    Begin
-      Left := Monitor.Left + Monitor.Width Div 2;
-      Top := Monitor.Top + Monitor.Height Div 2;
-      Width := Monitor.Width Div 2;
-      Height := Monitor.Height Div 2;
-    End;
+  case Hotkey of
+    HK_ArrangeToTopLeftCorner:
+      With Coordinates Do
+      Begin
+        Left := Monitor.Left;
+        Top := Monitor.Top;
+        Width := Monitor.Width Div 2;
+        Height := Monitor.Height Div 2;
+      End;
+    HK_ArrangeToTopRightCorner:
+      With Coordinates Do
+      Begin
+        Left := Monitor.Left + Monitor.Width Div 2;
+        Top := Monitor.Top;
+        Width := Monitor.Width Div 2;
+        Height := Monitor.Height Div 2;
+      End;
+    HK_ArrangeToBottomLeftCorner:
+      With Coordinates Do
+      Begin
+        Left := Monitor.Left;
+        Top := Monitor.Top + Monitor.Height Div 2;
+        Width := Monitor.Width Div 2;
+        Height := Monitor.Height Div 2;
+      End;
+    HK_ArrangeToBottom:
+      With Coordinates Do
+      Begin
+        Left := Monitor.Left;
+        Top := Monitor.Top + Monitor.Height Div 2;
+        Width := Monitor.Width;
+        Height := Monitor.Height Div 2;
+      End;
+    HK_ArrangeToBottomRightCorner:
+      With Coordinates Do
+      Begin
+        Left := Monitor.Left + Monitor.Width Div 2;
+        Top := Monitor.Top + Monitor.Height Div 2;
+        Width := Monitor.Width Div 2;
+        Height := Monitor.Height Div 2;
+      End;
+  end;
 
   // Send restore message, it remove maximized state of the window
   ShowWindow(Window, SW_RESTORE);
 
   // Moving window to the calculated rect
   MoveWindow(Window, Coordinates.Left, Coordinates.Top, Coordinates.Width,
-      Coordinates.Height, True);
+    Coordinates.Height, True);
 End;
 
 Function LowLevelKeyboardProc(HookCode: Longint; MessageParam: WParam;
-    StructParam: LParam): DWord; Stdcall;
+  StructParam: LParam): DWord; Stdcall;
 Var
   P: PKBDLLHOOKSTRUCT;
 Begin
@@ -141,7 +149,7 @@ Begin
           Else If MessageParam = WM_KEYDOWN Then
             If WINPressed Then
               // Independent whatisthis scancodes when pressing WIN+SHIFT+[whatever]
-              Case P.Vkcode Of
+              Case P.VkCode Of
                 NUM7:
                   Begin
                     ShortCutForm.Hotkey('7');
@@ -187,7 +195,7 @@ End;
 Procedure TShortCutForm.FormCreate(Sender: TObject);
 Begin
   FHook := SetWindowsHookEx(WH_KEYBOARD_LL, @LowLevelKeyboardProc,
-      Hinstance, 0);
+    Hinstance, 0);
 End;
 
 Procedure TShortCutForm.FormDestroy(Sender: TObject);
