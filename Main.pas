@@ -16,7 +16,7 @@ Type
     Procedure FormDestroy(Sender: TObject);
     Procedure Exit1Click(Sender: TObject);
   Private
-    Procedure Hotkey(Hotkey: String);
+    Procedure Hotkey(Hotkey: Integer);
   End;
 
 Var
@@ -135,56 +135,69 @@ Function LowLevelKeyboardProc(HookCode: Longint; MessageParam: WParam;
 Var
   P: PKBDLLHOOKSTRUCT;
 Begin
-  // Microsoftg noidea, it is always = HC_ACTION (=1)
-  If (HookCode = HC_ACTION) Then
-    Case (MessageParam) Of
-      // Check only keydown and keyup events
-      WM_KEYDOWN, WM_SYSKEYDOWN, WM_KEYUP, WM_SYSKEYUP:
-        Begin
-          // Get additional parameters about keystroke
-          P := PKBDLLHOOKSTRUCT(StructParam);
-          // Handle WIN button pressing
-          If (P.VkCode = VK_LWIN) Or (P.VkCode = VK_RWIN) Then
-            WINPressed := (MessageParam = WM_KEYDOWN)
-          Else If MessageParam = WM_KEYDOWN Then
-            If WINPressed Then
-              // Independent whatisthis scancodes when pressing WIN+SHIFT+[whatever]
-              Case P.VkCode Of
-                NUM7:
-                  Begin
-                    ShortCutForm.Hotkey('7');
-                    Result := 1;
-                    Exit;
-                  End;
-                NUM9:
-                  Begin
-                    ShortCutForm.Hotkey('9');
-                    Result := 1;
-                    Exit;
-                  End;
-                NUM1:
-                  Begin
-                    ShortCutForm.Hotkey('1');
-                    Result := 1;
-                    Exit;
-                  End;
-                NUM2:
-                  Begin
-                    ShortCutForm.Hotkey('2');
-                    Result := 1;
-                    Exit;
-                  End;
-                NUM3:
-                  Begin
-                    ShortCutForm.Hotkey('3');
-                    Result := 1;
-                    Exit;
-                  End;
-              End;
-        End;
-    End;
-  // If no our keycombo, go to the next hook in chain
-  Result := CallNextHookEx(0, HookCode, MessageParam, StructParam);
+  // Microsoft noidea, it is always = HC_ACTION (HC_ACTION=1)
+  If (HookCode <> HC_ACTION) Then
+  begin
+    Result := CallNextHookEx(0, HookCode, MessageParam, StructParam);
+    Exit;
+  end;
+  if (MessageParam <> WM_KEYDOWN) and (MessageParam <> WM_SYSKEYDOWN) and
+    (MessageParam <> WM_KEYUP) and (MessageParam <> WM_SYSKEYUP) then
+  begin
+    Result := CallNextHookEx(0, HookCode, MessageParam, StructParam);
+    Exit;
+  end;
+  // Get additional parameters about keystroke
+  P := PKBDLLHOOKSTRUCT(StructParam);
+  // Handle WIN button pressing
+  If (P.VkCode = VK_LWIN) Or (P.VkCode = VK_RWIN) Then
+  begin
+    WINPressed := (MessageParam = WM_KEYDOWN);
+    Result := CallNextHookEx(0, HookCode, MessageParam, StructParam);
+    Exit;
+  end;
+  if not WINPressed then
+  begin
+    Result := CallNextHookEx(0, HookCode, MessageParam, StructParam);
+    Exit;
+  end;
+  If MessageParam <> WM_KEYDOWN Then
+  begin
+    Result := CallNextHookEx(0, HookCode, MessageParam, StructParam);
+    Exit;
+  end;
+  Case P.VkCode Of
+    NUM7:
+      Begin
+        ShortCutForm.Hotkey(HK_ArrangeToTopLeftCorner);
+        Result := 1;
+        Exit;
+      End;
+    NUM9:
+      Begin
+        ShortCutForm.Hotkey(HK_ArrangeToTopRightCorner);
+        Result := 1;
+        Exit;
+      End;
+    NUM1:
+      Begin
+        ShortCutForm.Hotkey(HK_ArrangeToBottomLeftCorner);
+        Result := 1;
+        Exit;
+      End;
+    NUM2:
+      Begin
+        ShortCutForm.Hotkey(HK_ArrangeToBottom);
+        Result := 1;
+        Exit;
+      End;
+    NUM3:
+      Begin
+        ShortCutForm.Hotkey(HK_ArrangeToBottomRightCorner);
+        Result := 1;
+        Exit;
+      End;
+  End;
 End;
 
 Procedure TShortCutForm.Exit1Click(Sender: TObject);
