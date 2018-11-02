@@ -5,16 +5,19 @@ Interface
 Uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Menus,
-  Vcl.ExtCtrls;
+  Vcl.ExtCtrls, Registry;
 
 Type
   TShortCutForm = Class(TForm)
     TrayIcon: TTrayIcon;
     PopupMenu: TPopupMenu;
     Exit1: TMenuItem;
+    N1: TMenuItem;
+    StartwithWindows1: TMenuItem;
     Procedure FormCreate(Sender: TObject);
     Procedure FormDestroy(Sender: TObject);
     Procedure Exit1Click(Sender: TObject);
+    procedure StartwithWindows1Click(Sender: TObject);
   Private
     Procedure Hotkey(Hotkey: Integer);
   End;
@@ -57,6 +60,39 @@ Const
 Implementation
 
 {$R *.dfm}
+
+function GetAutoStart: Boolean;
+var
+  Registry: TRegistry;
+  s: String;
+begin
+  Result := False;
+  Registry := TRegistry.Create(KEY_READ);
+  Registry.RootKey := HKEY_CURRENT_USER;
+  Registry.OpenKey('\Software\Microsoft\Windows\CurrentVersion\Run', False);
+  Result := Registry.ValueExists('WNC');
+  Registry.Free;
+end;
+
+procedure SetAutoStart(bRegister: Boolean);
+var
+  Registry: TRegistry;
+begin
+  Registry := TRegistry.Create;
+  try
+    Registry.RootKey := HKEY_CURRENT_USER;
+    if Registry.OpenKey('\Software\Microsoft\Windows\CurrentVersion\Run', False)
+    then
+    begin
+      if bRegister = False then
+        Registry.DeleteValue('WNC')
+      else
+        Registry.WriteString('WNC', ParamStr(0));
+    end;
+  finally
+    Registry.Free;
+  end;
+end;
 
 Procedure TShortCutForm.Hotkey(Hotkey: Integer);
 Var
@@ -130,6 +166,12 @@ Begin
     Coordinates.Height, True);
 End;
 
+procedure TShortCutForm.StartwithWindows1Click(Sender: TObject);
+begin
+  StartwithWindows1.Checked := not StartwithWindows1.Checked;
+  SetAutoStart(StartwithWindows1.Checked);
+end;
+
 Function LowLevelKeyboardProc(HookCode: Longint; MessageParam: WParam;
   StructParam: LParam): DWord; Stdcall;
 Var
@@ -194,6 +236,7 @@ End;
 
 Procedure TShortCutForm.FormCreate(Sender: TObject);
 Begin
+  ShortCutForm.StartwithWindows1.Checked := GetAutoStart;
   FHook := SetWindowsHookEx(WH_KEYBOARD_LL, @LowLevelKeyboardProc,
     Hinstance, 0);
 End;

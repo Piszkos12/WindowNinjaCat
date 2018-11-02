@@ -24,6 +24,13 @@ object ShortCutForm: TShortCutForm
   object PopupMenu: TPopupMenu
     Left = 216
     Top = 144
+    object StartwithWindows1: TMenuItem
+      Caption = 'Start with Windows'
+      OnClick = StartwithWindows1Click
+    end
+    object N1: TMenuItem
+      Caption = '-'
+    end
     object Exit1: TMenuItem
       Caption = 'Exit'
       OnClick = Exit1Click
